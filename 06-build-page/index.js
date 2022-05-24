@@ -23,32 +23,38 @@ function makeFolder() {
 
 makeFolder();
 
-let stream = new fs.ReadStream(path.join(__dirname, '/template.html'));
-stream.on('readable', () => {
-  let data = stream.read();
-  if (data != null) {
-    let page = data.toString();
-    fs.readdir(path.join(__dirname, '/components'), (err, files) => {
-      if (err) throw err;
-      for (let file of files) {
-        if (path.extname(file) == '.html') {
-          let stream = new fs.ReadStream(path.join(__dirname, '/components/' + `${file}`));
-          stream.on('readable', () => {
-            let data = stream.read();
-            if (data != null) {
-              data = data.toString();
-              let fileName = file.slice(0, file.length - 5);
-              page = page.replace('{{' + `${fileName}` + '}}', data);
-              // console.log(page);
-              fs.writeFile(path.join(__dirname, '/project-dist/index.html'), page, () => {
+function index() {
+  let stream = new fs.ReadStream(path.join(__dirname, '/template.html'));
+  stream.on('readable', () => {
+    let data = stream.read();
+    if (data != null) {
+      let page = data.toString();
+      fs.readdir(path.join(__dirname, '/components'), (err, files) => {
+        if (err) throw err;
+        for (let file of files) {
+          if (path.extname(file) == '.html') {
+            let stream = new fs.ReadStream(path.join(__dirname, '/components/' + `${file}`));
+            fs.writeFile(path.join(__dirname, '/project-dist/index.html'), '', () => {});
+            function f() {
+              stream.on('readable', (data) => {
+                data = stream.read();
+                if (data != null) {
+                  data = data.toString();
+                  let fileName = file.slice(0, file.length - 5);
+                  page = page.replace('{{' + `${fileName}` + '}}', data);
+                  console.log('ok');
+                  fs.writeFile(path.join(__dirname, '/project-dist/index.html'), page, () => {});
+                }
               });
             }
-          });
+            f()
+          }
         }
-      }
-    });
-  }
-});
+      });
+    }
+  });
+}
+index()
 
 // copyDir();
 
@@ -88,7 +94,6 @@ function copyDir() {
             fs.mkdir(path.join(copyFolder, '/' + `${i}`), err => {});
             fs.copyFile(path.join(filesFolder, '/' + `${i}` + '/' + `${file}`), path.join(copyFolder, '/' + `${i}` + '/' + `${file}`), (err) => {
               if (err) throw err;
-              console.log(i);
             });
           }
         }
